@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
               La estrategia correcta marca la diferencia entre competir y ganar. Agenda una consulta estratégica hoy mismo.
             </p>
             <a 
-              href={`mailto:contacto@accionpoliticalatam.com`} 
+              href={`mailto:consultoraaccionpolitica@gmail.com`} 
               className="inline-flex items-center space-x-3 bg-black text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors"
             >
               <span>Contactar Ahora</span>

@@ -73,7 +73,7 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="border-t border-black/10 pt-8 flex flex-col md:flex-row justify-between items-center text-xs font-mono text-black/40 uppercase">
-          <p>&copy; 2025 {APP_NAME}. Todos los derechos reservados.</p>
+          <p>&copy; 2026 {APP_NAME}. Todos los derechos reservados.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <span>Aviso de Privacidad</span>
             <span>Términos de Servicio</span>

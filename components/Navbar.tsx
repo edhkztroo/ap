@@ -64,9 +64,9 @@ const Navbar: React.FC = () => {
             to="/encuestas"
             onMouseEnter={() => void preloadSurveysPage()}
             onFocus={() => void preloadSurveysPage()}
-            className="inline-flex h-11 items-center justify-center rounded-full border border-white bg-white px-6 text-xs font-bold uppercase tracking-[0.18em] text-[#081a3a] transition-all duration-300 hover:bg-[#f1f5f9]"
+            className="inline-flex h-11 items-center justify-center rounded-full border border-white bg-white px-6 text-xs font-bold uppercase tracking-[0.18em] text-[#081a3a] transition-all duration-300 hover:border-[#94cfff] hover:bg-[#94cfff] hover:text-[#081a3a]"
           >
-            Encuestas
+            AP Research
           </Link>
         </div>
 
@@ -106,9 +106,9 @@ const Navbar: React.FC = () => {
             onMouseEnter={() => void preloadSurveysPage()}
             onFocus={() => void preloadSurveysPage()}
             onClick={() => setIsMenuOpen(false)}
-            className="text-left text-lg font-heading font-medium text-[#c8e6ff] hover:text-white"
+            className="rounded-2xl bg-white px-4 py-3 text-left text-lg font-heading font-medium text-[#081a3a] transition-colors hover:bg-[#94cfff] hover:text-[#081a3a]"
           >
-            Encuestas
+            AP Research
           </Link>
           <button
             onClick={() => scrollToSection('contacto')}

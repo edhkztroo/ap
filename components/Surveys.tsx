@@ -128,6 +128,15 @@ const normalizeContentBlocks = (post: SurveyPost): SurveyContentBlock[] => {
 
 const stripHtml = (value: string) => value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const toRichHtml = (value: string) => value.replace(/\n/g, '<br />');
+const slugifyPostTitle = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const getSurveyPostPath = (post: SurveyPost) => `/encuestas/${slugifyPostTitle(post.title)}`;
 const getYouTubeEmbedUrl = (value: string) => {
   const trimmed = value.trim();
   const shortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
@@ -239,13 +248,19 @@ const Surveys: React.FC<SurveysProps> = ({
     [posts]
   );
 
-  const selectedPost = useMemo(
-    () => sortedPosts.find((post) => post.id === postId),
-    [postId, sortedPosts]
-  );
+  const selectedPost = useMemo(() => {
+    if (!postId) {
+      return undefined;
+    }
+
+    const normalizedPostId = decodeURIComponent(postId);
+    return sortedPosts.find(
+      (post) => post.id === normalizedPostId || slugifyPostTitle(post.title) === normalizedPostId
+    );
+  }, [postId, sortedPosts]);
   const suggestedPosts = useMemo(
-    () => sortedPosts.filter((post) => post.id !== postId).slice(0, 4),
-    [postId, sortedPosts]
+    () => sortedPosts.filter((post) => post.id !== selectedPost?.id).slice(0, 4),
+    [selectedPost?.id, sortedPosts]
   );
   const categories = useMemo(
     () => ['Todas', ...new Set(sortedPosts.map((post) => post.category))],
@@ -745,7 +760,7 @@ const Surveys: React.FC<SurveysProps> = ({
       onPublished(publishedPost);
       resetEditor();
       setSuccessMessage(editingPostId ? 'Artículo actualizado correctamente.' : 'Artículo publicado correctamente.');
-      navigate(`/encuestas/${publishedPost.id}`);
+      navigate(getSurveyPostPath(publishedPost));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No pude subir las imágenes en este momento.';
       setErrorMessage(message);
@@ -858,7 +873,7 @@ const Surveys: React.FC<SurveysProps> = ({
                     {suggestedPosts.map((post) => (
                       <Link
                         key={post.id}
-                        to={`/encuestas/${post.id}`}
+                        to={getSurveyPostPath(post)}
                         className="group block rounded-[24px] border border-[#d9e6f2] bg-[#f7fbff] p-4 transition-colors hover:border-[#94cfff] hover:bg-white"
                       >
                         <p className="mb-2 text-[10px] uppercase tracking-[0.26em] text-[#7b98bc]">
@@ -1493,14 +1508,14 @@ const Surveys: React.FC<SurveysProps> = ({
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {visibleGridPosts.map((post) => (
                   <article key={post.id} className="space-y-4">
-                    <Link to={`/encuestas/${post.id}`} className="block overflow-hidden rounded-[18px]">
+                    <Link to={getSurveyPostPath(post)} className="block overflow-hidden rounded-[18px]">
                       <img src={post.imageUrl} alt={post.title} className="h-[230px] w-full object-cover" />
                     </Link>
                     <div>
                       <span className="mb-3 inline-flex text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8bbce9]">
                         {post.category}
                       </span>
-                      <Link to={`/encuestas/${post.id}`} className="block">
+                      <Link to={getSurveyPostPath(post)} className="block">
                         <h4 className="text-2xl font-extrabold leading-tight text-white hover:text-[#dff2ff] transition-colors">
                           {post.title}
                         </h4>

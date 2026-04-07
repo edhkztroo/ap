@@ -93,7 +93,7 @@ const Hero: React.FC = () => {
       <div className="absolute top-1/3 right-0 w-1/2 h-full bg-brand-red/10 blur-[100px] transform rotate-12 z-0 pointer-events-none"></div>
 
       <div className="container mx-auto px-6 relative z-20">
-        <div className="max-w-7xl">
+        <div className="max-w-7xl rounded-[32px] md:rounded-[40px] border border-white/10 bg-black/20 backdrop-blur-[6px] px-6 py-12 md:px-10 md:py-14 shadow-[0_20px_80px_rgba(0,0,0,0.28)]">
           
           <div className="hero-subtitle flex items-center gap-4 mb-6 opacity-0">
             <div className="h-[2px] w-12 bg-brand-red shadow-[0_0_15px_rgba(230,30,37,0.8)]"></div>
@@ -117,17 +117,17 @@ const Hero: React.FC = () => {
               Arquitectura política de alto nivel. Transformamos crisis en oportunidades y candidatos en líderes a través de inteligencia de datos y comunicación de precisión.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 md:p-5 flex flex-col sm:flex-row gap-4">
               <button 
                 onClick={() => document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' })}
-                className="hero-btn opacity-0 group relative px-8 py-4 bg-brand-red text-white font-heading font-bold text-lg tracking-widest uppercase overflow-hidden hover:bg-red-700 transition-all shadow-[0_0_20px_rgba(230,30,37,0.4)] hover:shadow-[0_0_30px_rgba(230,30,37,0.6)]"
+                className="hero-btn opacity-0 group relative rounded-full px-8 py-4 bg-brand-red text-white font-heading font-bold text-lg tracking-widest uppercase overflow-hidden hover:bg-red-700 transition-all shadow-[0_0_20px_rgba(230,30,37,0.4)] hover:shadow-[0_0_30px_rgba(230,30,37,0.6)]"
               >
                 <span className="relative z-10">Agenda Reunión</span>
               </button>
               
               <button 
                  onClick={() => document.getElementById('experiencia')?.scrollIntoView({ behavior: 'smooth' })}
-                 className="hero-btn opacity-0 px-8 py-4 border border-white/30 text-white font-heading font-bold text-lg tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300"
+                 className="hero-btn opacity-0 rounded-full px-8 py-4 border border-white/30 text-white font-heading font-bold text-lg tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300"
               >
                 Ver Experiencia
               </button>

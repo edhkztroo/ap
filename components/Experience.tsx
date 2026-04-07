@@ -57,7 +57,7 @@ const Experience: React.FC = () => {
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
-        <div className="exp-header flex flex-col md:flex-row justify-between items-end mb-20 border-b border-white/20 pb-10">
+        <div className="exp-header flex flex-col md:flex-row justify-between items-end mb-20 rounded-[32px] border border-white/10 bg-white/[0.04] backdrop-blur-sm px-6 py-8 md:px-8 md:py-10">
            <div>
               <div className="flex items-center space-x-2 text-brand-red mb-4">
                   <Globe size={18} />
@@ -78,7 +78,7 @@ const Experience: React.FC = () => {
 
         <div className="countries-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {EXPERIENCE.map((exp, index) => (
-            <div key={index} className="country-card opacity-0 group relative bg-white/5 backdrop-blur-sm p-8 border border-white/10 hover:border-brand-red/50 hover:bg-white/10 transition-all duration-300">
+            <div key={index} className="country-card opacity-0 group relative rounded-[28px] bg-white/5 backdrop-blur-sm p-8 border border-white/10 hover:-translate-y-1 hover:border-brand-red/50 hover:bg-white/10 transition-all duration-300">
               <div className="absolute top-0 right-0 p-4 font-heading text-6xl font-bold text-white opacity-[0.03] group-hover:opacity-[0.1] transition-opacity select-none">
                   {exp.flagCode}
               </div>

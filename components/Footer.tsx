@@ -6,6 +6,7 @@ const Footer: React.FC = () => {
   return (
     <footer id="contacto" className="bg-brand-red text-white pt-20 pb-10">
       <div className="container mx-auto px-6">
+        <div className="rounded-[36px] bg-[#d71920] px-8 py-10 md:px-10 md:py-12 shadow-[0_24px_80px_rgba(110,7,10,0.28)]">
         <div className="flex flex-col md:flex-row justify-between items-start mb-20">
           
           <div className="max-w-2xl mb-10 md:mb-0">
@@ -18,7 +19,7 @@ const Footer: React.FC = () => {
             </p>
             <a 
               href={`mailto:consultoraaccionpolitica@gmail.com`} 
-              className="inline-flex items-center space-x-3 bg-black text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors"
+              className="inline-flex items-center space-x-3 rounded-full bg-black text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors"
             >
               <span>Contactar Ahora</span>
               <ArrowRight size={20} />
@@ -78,6 +79,7 @@ const Footer: React.FC = () => {
             <span>Aviso de Privacidad</span>
             <span>Términos de Servicio</span>
           </div>
+        </div>
         </div>
       </div>
     </footer>

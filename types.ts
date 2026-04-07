@@ -22,3 +22,31 @@ export interface Product {
   title: string;
   description: string;
 }
+
+export interface SurveyPost {
+  id: string;
+  title: string;
+  category: string;
+  summary: string;
+  content: string;
+  imageUrl: string;
+  pdfUrl: string;
+  publishedAt: string;
+  createdAt?: string;
+  contentBlocks?: SurveyContentBlock[];
+}
+
+export interface SurveyContentTextBlock {
+  id: string;
+  type: 'text';
+  content: string;
+}
+
+export interface SurveyContentImageBlock {
+  id: string;
+  type: 'image';
+  imageUrl: string;
+  caption?: string;
+}
+
+export type SurveyContentBlock = SurveyContentTextBlock | SurveyContentImageBlock;

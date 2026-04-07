@@ -68,6 +68,7 @@ const Services: React.FC = () => {
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
+        <div className="rounded-[36px] border border-white/10 bg-black/20 backdrop-blur-sm px-6 py-10 md:px-10 md:py-12">
         <div className="section-header mb-24 text-center">
             <span className="text-brand-red font-mono text-xs uppercase tracking-widest font-bold mb-3 block">Nuestra Expertise</span>
             <h2 className="font-heading text-5xl md:text-7xl text-white font-bold leading-none mb-6">
@@ -86,7 +87,7 @@ const Services: React.FC = () => {
             return (
               <div 
                 key={index} 
-                className="service-card group relative h-[480px] bg-white/5 border border-white/10 overflow-hidden transition-all duration-500 hover:border-brand-red/50 hover:shadow-2xl hover:shadow-brand-red/10"
+                className="service-card group relative h-[480px] rounded-[28px] bg-white/5 border border-white/10 overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-brand-red/50 hover:shadow-2xl hover:shadow-brand-red/10"
               >
                 {/* Default dark gradient background */}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80 z-10 pointer-events-none"></div>
@@ -99,7 +100,7 @@ const Services: React.FC = () => {
 
                 <div className="absolute inset-0 flex flex-col justify-between p-8 z-20">
                     <div className="flex justify-between items-start">
-                        <div className="h-14 w-14 bg-black/50 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-brand-red group-hover:border-brand-red group-hover:text-white transition-all duration-300 shadow-lg">
+                        <div className="h-14 w-14 rounded-2xl bg-black/50 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-brand-red group-hover:border-brand-red group-hover:text-white transition-all duration-300 shadow-lg">
                            <Icon size={24} />
                         </div>
                         <ArrowUpRight className="text-gray-500 group-hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0" size={28} />
@@ -123,6 +124,7 @@ const Services: React.FC = () => {
               </div>
             );
           })}
+        </div>
         </div>
       </div>
     </section>

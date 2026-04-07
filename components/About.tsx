@@ -65,7 +65,7 @@ const About: React.FC = () => {
           
           {/* Image Side */}
           <div ref={imgContainerRef} className="relative group">
-            <div className="relative overflow-hidden shadow-2xl border-r-4 border-brand-red">
+            <div className="relative overflow-hidden rounded-[32px] shadow-2xl border border-white/10">
                <div className="absolute inset-0 bg-brand-dark/20 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
                <img 
                  src="https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?q=80&w=1932&auto=format&fit=crop" 
@@ -74,7 +74,7 @@ const About: React.FC = () => {
                />
             </div>
             {/* Floating Badge */}
-            <div className="absolute top-10 -left-6 bg-white text-black p-6 shadow-xl z-20 transform -rotate-2 group-hover:rotate-0 transition-transform duration-300">
+            <div className="absolute top-10 -left-2 md:-left-6 bg-white text-black p-6 rounded-[24px] shadow-xl z-20 transform -rotate-2 group-hover:rotate-0 transition-transform duration-300">
                 <span className="block text-sm font-mono uppercase tracking-widest border-b border-black pb-2 mb-2">Desde 2010</span>
                 <span className="block text-xl font-heading font-bold">Liderando<br/>Latinoamérica</span>
             </div>
@@ -91,12 +91,12 @@ const About: React.FC = () => {
               {ABOUT_TEXT}
             </p>
             
-            <div className="about-stagger grid grid-cols-2 gap-8 mb-16 border-y border-white/10 py-8">
-                <div>
+            <div className="about-stagger grid grid-cols-2 gap-4 mb-16">
+                <div className="rounded-[24px] border border-white/10 bg-white/5 p-6">
                     <span className="block text-4xl font-heading font-bold text-white mb-1">98%</span>
                     <span className="text-[10px] text-gray-500 uppercase tracking-widest">Tasa de Éxito</span>
                 </div>
-                <div>
+                <div className="rounded-[24px] border border-white/10 bg-white/5 p-6">
                     <span className="block text-4xl font-heading font-bold text-white mb-1">24/7</span>
                     <span className="text-[10px] text-gray-500 uppercase tracking-widest">Monitoreo Activo</span>
                 </div>
@@ -106,8 +106,8 @@ const About: React.FC = () => {
               {PRODUCTS.map((product, index) => {
                 const Icon = icons[index % icons.length];
                 return (
-                  <div key={index} className="product-card flex items-center gap-6 p-4 border border-white/5 hover:bg-white/5 hover:border-brand-red/30 transition-colors duration-300">
-                    <div className="h-12 w-12 bg-brand-charcoal flex items-center justify-center text-white shrink-0">
+                  <div key={index} className="product-card flex items-center gap-6 p-5 rounded-[24px] border border-white/8 bg-white/[0.03] hover:bg-white/5 hover:border-brand-red/30 transition-colors duration-300">
+                    <div className="h-12 w-12 rounded-2xl bg-brand-charcoal flex items-center justify-center text-white shrink-0">
                         <Icon size={20} />
                     </div>
                     <div>

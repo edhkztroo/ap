@@ -2,13 +2,16 @@
 export default {
   content: [
     "./index.html",
-    "./**/*.{js,ts,jsx,tsx}",
+    "./App.{js,ts,jsx,tsx}",
+    "./index.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
       fontFamily: {
         sans: ['Manrope', 'sans-serif'],
         heading: ['Oswald', 'sans-serif'],
+        editorial: ['Cormorant Garamond', 'serif'],
       },
       colors: {
         brand: {

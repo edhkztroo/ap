@@ -798,7 +798,7 @@ const Surveys: React.FC<SurveysProps> = ({
                     block.type === 'text' ? (
                       <div
                         key={block.id}
-                        className="text-lg leading-relaxed text-[#b8d8f4] space-y-4 [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-2xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2 [&_figure]:space-y-3 [&_figure]:my-8 [&_img]:w-full [&_img]:max-h-[560px] [&_img]:rounded-[28px] [&_img]:object-cover [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-[24px]"
+                        className="text-lg leading-relaxed text-[#b8d8f4] space-y-4 [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-2xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2 [&_figure]:space-y-3 [&_figure]:my-8 [&_img]:w-full [&_img]:max-h-[720px] [&_img]:rounded-[28px] [&_img]:object-contain [&_img]:bg-[#0b214c] [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-[24px]"
                         dangerouslySetInnerHTML={{ __html: toRichHtml(block.content) }}
                       />
                     ) : (
@@ -806,7 +806,7 @@ const Surveys: React.FC<SurveysProps> = ({
                         <img
                           src={block.imageUrl}
                           alt={block.caption || selectedPost.title}
-                          className="w-full max-h-[560px] object-cover rounded-[28px] border border-[#94cfff]/18"
+                          className="w-full max-h-[720px] object-contain rounded-[28px] border border-[#94cfff]/18 bg-[#0b214c]"
                         />
                         {block.caption ? (
                           <figcaption className="text-sm text-[#8bbce9] text-center">{block.caption}</figcaption>
@@ -1269,7 +1269,7 @@ const Surveys: React.FC<SurveysProps> = ({
                               <div className="rounded-2xl border border-[#d6e6f8] bg-[#fbfdff] p-4">
                                 <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[#4c6aa1]">Vista previa</p>
                                 <div
-                                  className="space-y-3 text-[#16295d] [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6 [&_figure]:space-y-2 [&_figure]:my-4 [&_img]:w-full [&_img]:max-h-72 [&_img]:rounded-[18px] [&_img]:object-cover [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-[18px]"
+                                  className="space-y-3 text-[#16295d] [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6 [&_figure]:space-y-2 [&_figure]:my-4 [&_img]:w-full [&_img]:max-h-72 [&_img]:rounded-[18px] [&_img]:object-contain [&_img]:bg-[#eef6ff] [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-[18px]"
                                   dangerouslySetInnerHTML={{ __html: block.content ? toRichHtml(block.content) : '<p>Sin contenido todavía.</p>' }}
                                 />
                               </div>

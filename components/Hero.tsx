@@ -26,10 +26,10 @@ const Hero: React.FC = () => {
         "-=2"
       )
       
-      // Letters Stagger
-      .fromTo(".hero-char", 
-        { y: 100, autoAlpha: 0, rotateX: -90 },
-        { y: 0, autoAlpha: 1, rotateX: 0, stagger: 0.03, duration: 1.2, ease: "back.out(1.7)" }, 
+      // Title reveal
+      .fromTo(".hero-line", 
+        { y: 70, autoAlpha: 0 },
+        { y: 0, autoAlpha: 1, stagger: 0.12, duration: 1, ease: "power3.out" }, 
         "-=1.8"
       )
       
@@ -64,15 +64,6 @@ const Hero: React.FC = () => {
     return () => ctx.revert();
   }, []);
 
-  // Helper to split text
-  const splitText = (text: string, className: string) => {
-    return text.split("").map((char, index) => (
-      <span key={index} className={`${className} inline-block whitespace-pre origin-bottom`}>
-        {char}
-      </span>
-    ));
-  };
-
   return (
     <section id="hero" ref={containerRef} className="relative min-h-screen flex items-center overflow-hidden bg-brand-dark pt-20">
       
@@ -103,12 +94,16 @@ const Hero: React.FC = () => {
           </div>
 
           <div ref={titleRef} className="font-heading font-bold leading-[0.85] text-white mb-10 uppercase perspective-text">
-            <div className="text-6xl md:text-8xl lg:text-[10rem] overflow-hidden flex flex-wrap">
-              {splitText("Estrategia", "hero-char text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400")}
+            <div className="overflow-hidden">
+              <div className="hero-line text-6xl md:text-8xl lg:text-[10rem] text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 opacity-0">
+                Estrategia
+              </div>
             </div>
-            <div className="text-6xl md:text-8xl lg:text-[10rem] overflow-hidden flex flex-wrap items-center gap-4 md:gap-8">
-               <span className="hero-char text-brand-red italic pr-4 opacity-0">&</span>
-               {splitText("Poder", "hero-char opacity-0")}
+            <div className="overflow-hidden">
+              <div className="hero-line text-6xl md:text-8xl lg:text-[10rem] flex flex-wrap items-center gap-4 md:gap-8 opacity-0">
+                <span className="text-brand-red italic pr-4">&</span>
+                <span>Poder</span>
+              </div>
             </div>
           </div>
 

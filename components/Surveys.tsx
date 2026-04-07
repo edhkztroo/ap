@@ -243,6 +243,10 @@ const Surveys: React.FC<SurveysProps> = ({
     () => sortedPosts.find((post) => post.id === postId),
     [postId, sortedPosts]
   );
+  const suggestedPosts = useMemo(
+    () => sortedPosts.filter((post) => post.id !== postId).slice(0, 4),
+    [postId, sortedPosts]
+  );
   const categories = useMemo(
     () => ['Todas', ...new Set(sortedPosts.map((post) => post.category))],
     [sortedPosts]
@@ -753,12 +757,12 @@ const Surveys: React.FC<SurveysProps> = ({
   if (mode === 'detail') {
     return (
     <>
-    <section className="min-h-screen bg-[#081a3a] py-24 text-white">
+    <section className="bg-[#081a3a] pt-24 pb-16 text-white">
       <div className="container mx-auto px-6">
           <div className="flex items-center justify-between gap-4 mb-10">
             <Link
               to="/encuestas"
-              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-[#8bbce9] hover:text-white transition-colors"
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-[#9fcbf2] hover:text-white transition-colors"
             >
               <ArrowLeft size={16} />
               Volver al home de encuestas
@@ -767,49 +771,61 @@ const Surveys: React.FC<SurveysProps> = ({
           </div>
 
           {isLoading ? (
-            <div className="min-h-[60vh] flex items-center justify-center gap-3 text-[#8bbce9]">
+            <div className="min-h-[60vh] flex items-center justify-center gap-3 text-[#c2dbf5]">
               <Loader className="animate-spin" size={20} />
               Cargando artículo...
             </div>
           ) : selectedPost ? (
-            <article className="max-w-5xl mx-auto overflow-hidden rounded-[36px] border border-[#94cfff]/20 bg-[#102553] shadow-[0_0_60px_rgba(11,30,70,0.35)]">
-              <div className="relative h-[320px] md:h-[540px]">
-                <img src={selectedPost.imageUrl} alt={selectedPost.title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#081a3a] via-[#081a3a]/40 to-transparent" />
-                <div className="absolute bottom-0 left-0 p-8 md:p-12 max-w-4xl">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.3em] font-mono text-[#94cfff] mb-4 backdrop-blur-sm">
+            <div className="max-w-5xl">
+              <article className="space-y-8">
+                <div className="space-y-5">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-4 py-2 text-xs uppercase tracking-[0.3em] font-mono text-[#9fcbf2]">
                     <FileText size={14} />
                     {selectedPost.category}
                   </span>
-              <h1 className="font-heading text-4xl md:text-7xl leading-[0.92] text-white mb-4">
-                {selectedPost.title}
-              </h1>
+                  <h1 className="max-w-4xl font-heading text-4xl leading-[0.94] text-white md:text-6xl">
+                    {selectedPost.title}
+                  </h1>
                   <div className="inline-flex items-center gap-2 text-sm text-[#d2e9ff]">
                     <CalendarDays size={16} />
                     {formatDate(selectedPost.publishedAt)}
                   </div>
+                  <p className="max-w-3xl text-lg leading-relaxed text-[#d7e7f7] md:text-[1.2rem]">
+                    {selectedPost.summary}
+                  </p>
                 </div>
-              </div>
+              </article>
+            </div>
+          ) : (
+            <div className="min-h-[50vh] flex items-center justify-center text-center px-6 text-[#c2dbf5]">
+              No encontré ese artículo.
+            </div>
+          )}
+        </div>
+      </section>
 
-              <div className="p-8 md:p-12 space-y-8 bg-[linear-gradient(180deg,rgba(16,37,83,1)_0%,rgba(11,28,64,1)_100%)]">
-                <p className="text-[1.55rem] md:text-[1.8rem] leading-[1.2] text-[#dff2ff]">{selectedPost.summary}</p>
-                <div className="space-y-8">
+      {selectedPost ? (
+        <section className="bg-white py-16 text-[#102553] md:py-20">
+          <div className="container mx-auto px-6">
+            <div className="mx-auto grid max-w-6xl gap-14 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <article className="space-y-8">
+                <div className="space-y-8 text-[#243b5f]">
                   {normalizeContentBlocks(selectedPost).map((block) =>
                     block.type === 'text' ? (
                       <div
                         key={block.id}
-                        className="text-lg leading-relaxed text-[#b8d8f4] space-y-4 [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-2xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2 [&_figure]:space-y-3 [&_figure]:my-8 [&_img]:w-full [&_img]:max-h-[720px] [&_img]:rounded-[28px] [&_img]:object-contain [&_img]:bg-[#0b214c] [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-[24px]"
+                        className="text-[1rem] md:text-[1.05rem] leading-relaxed text-[#334c73] space-y-4 [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-xl [&_h3]:uppercase [&_h3]:text-[#102553] [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2 [&_figure]:my-8 [&_figure]:space-y-3 [&_figure]:text-center [&_img]:block [&_img]:w-auto [&_img]:max-w-full [&_img]:max-h-[560px] [&_img]:mx-auto [&_img]:rounded-[28px] [&_img]:object-contain [&_img]:bg-[#eef5fb] [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-[24px]"
                         dangerouslySetInnerHTML={{ __html: toRichHtml(block.content) }}
                       />
                     ) : (
-                      <figure key={block.id} className="space-y-3">
+                      <figure key={block.id} className="space-y-3 text-center">
                         <img
                           src={block.imageUrl}
                           alt={block.caption || selectedPost.title}
-                          className="w-full max-h-[720px] object-contain rounded-[28px] border border-[#94cfff]/18 bg-[#0b214c]"
+                          className="block w-auto max-w-full max-h-[560px] mx-auto object-contain rounded-[28px] border border-[#d9e6f2] bg-[#eef5fb]"
                         />
                         {block.caption ? (
-                          <figcaption className="text-sm text-[#8bbce9] text-center">{block.caption}</figcaption>
+                          <figcaption className="text-sm text-[#6482a8] text-center">{block.caption}</figcaption>
                         ) : null}
                       </figure>
                     )
@@ -824,15 +840,52 @@ const Surveys: React.FC<SurveysProps> = ({
                   <Download size={18} />
                   Descargar PDF
                 </a>
-              </div>
-            </article>
-          ) : (
-            <div className="min-h-[50vh] flex items-center justify-center text-center px-6 text-[#8bbce9]">
-              No encontré ese artículo.
+              </article>
+
+              <aside className="xl:border-l xl:border-[#d9e6f2] xl:pl-8">
+                <div className="sticky top-24 space-y-5">
+                  <div className="space-y-2">
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-[#7b98bc]">Sugerencias</p>
+                    <h2 className="font-heading text-2xl uppercase leading-none text-[#102553]">
+                      Otros artículos
+                    </h2>
+                    <p className="text-sm leading-relaxed text-[#6482a8]">
+                      Sigue explorando otros análisis publicados en Research.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {suggestedPosts.map((post) => (
+                      <Link
+                        key={post.id}
+                        to={`/encuestas/${post.id}`}
+                        className="group block rounded-[24px] border border-[#d9e6f2] bg-[#f7fbff] p-4 transition-colors hover:border-[#94cfff] hover:bg-white"
+                      >
+                        <p className="mb-2 text-[10px] uppercase tracking-[0.26em] text-[#7b98bc]">
+                          {post.category}
+                        </p>
+                        <h3 className="text-base font-semibold leading-snug text-[#102553] transition-colors group-hover:text-[#1f5d9f]">
+                          {post.title}
+                        </h3>
+                        <p className="mt-3 text-xs text-[#6482a8]">{formatDate(post.publishedAt)}</p>
+                      </Link>
+                    ))}
+                  </div>
+
+                  <Link
+                    to="/encuestas"
+                    className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-[#5d82aa] hover:text-[#102553] transition-colors"
+                  >
+                    <ArrowLeft size={14} />
+                    Ver todas las encuestas
+                  </Link>
+                </div>
+              </aside>
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      ) : null}
+
       <ResearchFooter />
     </>
     );
@@ -1269,7 +1322,7 @@ const Surveys: React.FC<SurveysProps> = ({
                               <div className="rounded-2xl border border-[#d6e6f8] bg-[#fbfdff] p-4">
                                 <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[#4c6aa1]">Vista previa</p>
                                 <div
-                                  className="space-y-3 text-[#16295d] [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6 [&_figure]:space-y-2 [&_figure]:my-4 [&_img]:w-full [&_img]:max-h-72 [&_img]:rounded-[18px] [&_img]:object-contain [&_img]:bg-[#eef6ff] [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-[18px]"
+                                  className="space-y-3 text-[#16295d] [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6 [&_figure]:my-4 [&_figure]:space-y-2 [&_figure]:text-center [&_img]:block [&_img]:w-auto [&_img]:max-w-full [&_img]:max-h-72 [&_img]:mx-auto [&_img]:rounded-[18px] [&_img]:object-contain [&_img]:bg-[#eef6ff] [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-[18px]"
                                   dangerouslySetInnerHTML={{ __html: block.content ? toRichHtml(block.content) : '<p>Sin contenido todavía.</p>' }}
                                 />
                               </div>
@@ -1293,7 +1346,7 @@ const Surveys: React.FC<SurveysProps> = ({
                                 <img
                                   src={block.imageUrl}
                                   alt="Vista previa"
-                                  className="w-full max-h-64 object-cover rounded-[20px] border border-[#d6e6f8]"
+                                  className="block w-auto max-w-full max-h-72 mx-auto object-contain rounded-[20px] border border-[#d6e6f8] bg-[#eef6ff]"
                                 />
                               ) : null}
                               <input

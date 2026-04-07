@@ -6,7 +6,7 @@ const ResearchFooter: React.FC = () => {
   return (
     <footer className="bg-[#081a3a] text-white pt-20 pb-10">
       <div className="container mx-auto px-6">
-        <div className="rounded-[36px] bg-[linear-gradient(135deg,rgba(16,37,83,0.98)_0%,rgba(11,28,64,1)_100%)] border border-[#94cfff]/18 px-8 py-10 md:px-10 md:py-12 shadow-[0_24px_80px_rgba(6,18,44,0.3)]">
+        <div className="bg-transparent px-0 py-0">
           <div className="flex flex-col md:flex-row justify-between items-start mb-20 gap-10">
             <div className="max-w-2xl">
               <h2 className="font-heading text-5xl md:text-7xl font-bold mb-8 leading-none">

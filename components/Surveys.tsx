@@ -127,6 +127,15 @@ const normalizeContentBlocks = (post: SurveyPost): SurveyContentBlock[] => {
 };
 
 const stripHtml = (value: string) => value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const toRichHtml = (value: string) => value.replace(/\n/g, '<br />');
+const getYouTubeEmbedUrl = (value: string) => {
+  const trimmed = value.trim();
+  const shortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
+  const longMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);
+  const embedMatch = trimmed.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{6,})/);
+  const id = shortMatch?.[1] || longMatch?.[1] || embedMatch?.[1];
+  return id ? `https://www.youtube.com/embed/${id}` : null;
+};
 
 const PageHeader = () => (
   <div className="flex items-center justify-between gap-4 mb-10">
@@ -169,7 +178,9 @@ const Surveys: React.FC<SurveysProps> = ({
   const [cmsEditors, setCmsEditors] = useState<CmsEditorAccount[]>(defaultCmsEditors);
   const [currentCmsUser, setCurrentCmsUser] = useState<CmsEditorAccount | null>(null);
   const [newEditor, setNewEditor] = useState({ username: '', password: '' });
+  const [editorSearchTerm, setEditorSearchTerm] = useState('');
   const textEditorRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const inlineImageInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
     if (!supabase) {
@@ -270,6 +281,16 @@ const Surveys: React.FC<SurveysProps> = ({
     });
   }, [sortedPosts, searchTerm, categoryFilter, countryFilter]);
   const visibleGridPosts = filteredPosts.slice(0, visiblePosts);
+  const filteredEditorPosts = useMemo(() => {
+    const normalized = editorSearchTerm.trim().toLowerCase();
+    if (!normalized) {
+      return sortedPosts;
+    }
+
+    return sortedPosts.filter((post) =>
+      `${post.title} ${post.category} ${post.summary}`.toLowerCase().includes(normalized)
+    );
+  }, [editorSearchTerm, sortedPosts]);
 
   useEffect(() => {
     setVisiblePosts(9);
@@ -340,6 +361,70 @@ const Surveys: React.FC<SurveysProps> = ({
       const caret = start + wrapperStart.length + selection.length + wrapperEnd.length;
       target.setSelectionRange(caret, caret);
     });
+  };
+
+  const insertHtmlAtCursor = (blockId: string, html: string) => {
+    const target = textEditorRefs.current[blockId];
+    if (!target) {
+      return;
+    }
+
+    const start = target.selectionStart ?? 0;
+    const end = target.selectionEnd ?? 0;
+    const currentValue = target.value;
+    const nextValue = currentValue.slice(0, start) + html + currentValue.slice(end);
+
+    updateBlock(blockId, { content: nextValue });
+
+    window.requestAnimationFrame(() => {
+      target.focus();
+      const caret = start + html.length;
+      target.setSelectionRange(caret, caret);
+    });
+  };
+
+  const handleInlineImageSelect = async (blockId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !session) {
+      return;
+    }
+
+    try {
+      setIsPublishing(true);
+      const imageUrl = await uploadImage(file, session.user.id, 'inline');
+      insertHtmlAtCursor(
+        blockId,
+        `\n<figure><img src="${imageUrl}" alt="" /><figcaption>Pie de foto</figcaption></figure>\n`
+      );
+      setSuccessMessage('Imagen insertada dentro del texto.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No pude insertar la imagen.';
+      setErrorMessage(message);
+    } finally {
+      setIsPublishing(false);
+      if (event.target) {
+        event.target.value = '';
+      }
+    }
+  };
+
+  const handleEmbedYoutube = (blockId: string) => {
+    const input = window.prompt('Pega aquí el enlace de YouTube');
+    if (!input) {
+      return;
+    }
+
+    const embedUrl = getYouTubeEmbedUrl(input);
+    if (!embedUrl) {
+      setErrorMessage('Ese enlace de YouTube no parece válido.');
+      return;
+    }
+
+    insertHtmlAtCursor(
+      blockId,
+      `\n<div class="video-embed"><iframe src="${embedUrl}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>\n`
+    );
+    setSuccessMessage('Video de YouTube insertado.');
   };
 
   const startEditingPost = (post: SurveyPost) => {
@@ -713,8 +798,8 @@ const Surveys: React.FC<SurveysProps> = ({
                     block.type === 'text' ? (
                       <div
                         key={block.id}
-                        className="text-lg leading-relaxed text-[#b8d8f4] space-y-4 [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-2xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2"
-                        dangerouslySetInnerHTML={{ __html: block.content }}
+                        className="text-lg leading-relaxed text-[#b8d8f4] space-y-4 [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-2xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2 [&_figure]:space-y-3 [&_figure]:my-8 [&_img]:w-full [&_img]:max-h-[560px] [&_img]:rounded-[28px] [&_img]:object-cover [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-[24px]"
+                        dangerouslySetInnerHTML={{ __html: toRichHtml(block.content) }}
                       />
                     ) : (
                       <figure key={block.id} className="space-y-3">
@@ -924,7 +1009,7 @@ const Surveys: React.FC<SurveysProps> = ({
                     <div>
                       <h3 className="font-heading text-2xl uppercase leading-none text-white mb-2">Artículos</h3>
                       <p className="text-sm text-[#b8d8f4]">
-                        Elige una nota existente para editarla o crea una nueva desde cero.
+                        Busca una nota existente para editarla o crea una nueva desde cero.
                       </p>
                     </div>
                     {editingPostId ? (
@@ -937,8 +1022,20 @@ const Surveys: React.FC<SurveysProps> = ({
                       </button>
                     ) : null}
                   </div>
-                  <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
-                    {sortedPosts.map((post) => (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-3 rounded-full border border-[#94cfff]/16 bg-[#081a3a]/50 px-4 py-3">
+                      <Search size={14} className="text-[#8bbce9]" />
+                      <input
+                        type="text"
+                        value={editorSearchTerm}
+                        onChange={(event) => setEditorSearchTerm(event.target.value)}
+                        placeholder="Buscar artículo para editar"
+                        className="w-full bg-transparent text-sm text-white placeholder:text-[#7eaad1] outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+                    {filteredEditorPosts.map((post) => (
                       <div
                         key={post.id}
                         className={`rounded-2xl border px-4 py-4 ${
@@ -958,6 +1055,11 @@ const Surveys: React.FC<SurveysProps> = ({
                         </button>
                       </div>
                     ))}
+                    {filteredEditorPosts.length === 0 ? (
+                      <div className="rounded-2xl border border-[#94cfff]/12 bg-[#081a3a]/40 px-4 py-6 text-sm text-[#8bbce9]">
+                        No encontré artículos con esa búsqueda.
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -1126,6 +1228,32 @@ const Surveys: React.FC<SurveysProps> = ({
                                 >
                                   H3
                                 </button>
+                                <button
+                                  type="button"
+                                  onClick={() => inlineImageInputRefs.current[block.id]?.click()}
+                                  className="inline-flex items-center gap-1 rounded-full border border-[#c9def6] px-3 py-2 text-xs font-semibold text-[#16295d] hover:bg-[#eef6ff]"
+                                >
+                                  <ImagePlus size={12} />
+                                  Imagen
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleEmbedYoutube(block.id)}
+                                  className="inline-flex items-center gap-1 rounded-full border border-[#c9def6] px-3 py-2 text-xs font-semibold text-[#16295d] hover:bg-[#eef6ff]"
+                                >
+                                  Video
+                                </button>
+                                <input
+                                  ref={(node) => {
+                                    inlineImageInputRefs.current[block.id] = node;
+                                  }}
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(event) => {
+                                    void handleInlineImageSelect(block.id, event);
+                                  }}
+                                  className="hidden"
+                                />
                               </div>
                               <textarea
                                 ref={(node) => {
@@ -1141,8 +1269,8 @@ const Surveys: React.FC<SurveysProps> = ({
                               <div className="rounded-2xl border border-[#d6e6f8] bg-[#fbfdff] p-4">
                                 <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[#4c6aa1]">Vista previa</p>
                                 <div
-                                  className="space-y-3 text-[#16295d] [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6"
-                                  dangerouslySetInnerHTML={{ __html: block.content || '<p>Sin contenido todavía.</p>' }}
+                                  className="space-y-3 text-[#16295d] [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6 [&_figure]:space-y-2 [&_figure]:my-4 [&_img]:w-full [&_img]:max-h-72 [&_img]:rounded-[18px] [&_img]:object-cover [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-[18px]"
+                                  dangerouslySetInnerHTML={{ __html: block.content ? toRichHtml(block.content) : '<p>Sin contenido todavía.</p>' }}
                                 />
                               </div>
                             </div>

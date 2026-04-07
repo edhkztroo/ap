@@ -1,17 +1,20 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
+  Bold,
   CalendarDays,
   Download,
   FileImage,
   FileText,
   ImagePlus,
+  Italic,
   Loader,
   LogIn,
   LogOut,
   PlusCircle,
   Rows3,
-  Search
+  Search,
+  Underline
 } from 'lucide-react';
 import { Session } from '@supabase/supabase-js';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -123,6 +126,8 @@ const normalizeContentBlocks = (post: SurveyPost): SurveyContentBlock[] => {
     }));
 };
 
+const stripHtml = (value: string) => value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
 const PageHeader = () => (
   <div className="flex items-center justify-between gap-4 mb-10">
     <Link
@@ -150,7 +155,9 @@ const Surveys: React.FC<SurveysProps> = ({
   const [authState, setAuthState] = useState({ username: '', password: '' });
   const [session, setSession] = useState<Session | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [existingCoverImageUrl, setExistingCoverImageUrl] = useState('');
   const [contentBlocks, setContentBlocks] = useState<AdminBlock[]>([createEmptyTextBlock()]);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -162,6 +169,7 @@ const Surveys: React.FC<SurveysProps> = ({
   const [cmsEditors, setCmsEditors] = useState<CmsEditorAccount[]>(defaultCmsEditors);
   const [currentCmsUser, setCurrentCmsUser] = useState<CmsEditorAccount | null>(null);
   const [newEditor, setNewEditor] = useState({ username: '', password: '' });
+  const textEditorRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
 
   useEffect(() => {
     if (!supabase) {
@@ -307,6 +315,73 @@ const Surveys: React.FC<SurveysProps> = ({
     });
   };
 
+  const applyTextFormat = (
+    blockId: string,
+    wrapperStart: string,
+    wrapperEnd: string,
+    placeholder: string
+  ) => {
+    const target = textEditorRefs.current[blockId];
+    if (!target) {
+      return;
+    }
+
+    const start = target.selectionStart ?? 0;
+    const end = target.selectionEnd ?? 0;
+    const currentValue = target.value;
+    const selection = currentValue.slice(start, end) || placeholder;
+    const nextValue =
+      currentValue.slice(0, start) + wrapperStart + selection + wrapperEnd + currentValue.slice(end);
+
+    updateBlock(blockId, { content: nextValue });
+
+    window.requestAnimationFrame(() => {
+      target.focus();
+      const caret = start + wrapperStart.length + selection.length + wrapperEnd.length;
+      target.setSelectionRange(caret, caret);
+    });
+  };
+
+  const startEditingPost = (post: SurveyPost) => {
+    setEditingPostId(post.id);
+    setFormState({
+      title: post.title,
+      category: post.category,
+      summary: post.summary,
+      pdfUrl: post.pdfUrl,
+      publishedAt: post.publishedAt
+    });
+    setSelectedImage(null);
+    setExistingCoverImageUrl(post.imageUrl);
+    setContentBlocks(
+      normalizeContentBlocks(post).map((block) =>
+        block.type === 'text'
+          ? {
+              id: block.id,
+              type: 'text' as const,
+              content: block.content
+            }
+          : {
+              id: block.id,
+              type: 'image' as const,
+              caption: block.caption || '',
+              imageUrl: block.imageUrl,
+              file: null
+            }
+      )
+    );
+    setErrorMessage('');
+    setSuccessMessage(`Editando: ${post.title}`);
+  };
+
+  const resetEditor = () => {
+    setEditingPostId(null);
+    setFormState(emptyForm);
+    setSelectedImage(null);
+    setExistingCoverImageUrl('');
+    setContentBlocks([createEmptyTextBlock()]);
+  };
+
   const uploadImage = async (file: File, userId: string, prefix: string) => {
     if (!supabase) {
       throw new Error('Supabase no está configurado.');
@@ -433,7 +508,7 @@ const Surveys: React.FC<SurveysProps> = ({
       setErrorMessage('Debes iniciar sesión como admin para publicar.');
       return;
     }
-    if (!selectedImage) {
+    if (!selectedImage && !existingCoverImageUrl) {
       setErrorMessage('Debes seleccionar una imagen principal.');
       return;
     }
@@ -465,7 +540,9 @@ const Surveys: React.FC<SurveysProps> = ({
     setSuccessMessage('');
 
     try {
-      const heroImageUrl = await uploadImage(selectedImage, session.user.id, 'cover');
+      const heroImageUrl = selectedImage
+        ? await uploadImage(selectedImage, session.user.id, 'cover')
+        : existingCoverImageUrl;
       const uploadedBlocks: SurveyContentBlock[] = [];
 
       for (const block of normalizedBlocks) {
@@ -474,6 +551,16 @@ const Surveys: React.FC<SurveysProps> = ({
             id: block.id,
             type: 'text',
             content: block.content.trim()
+          });
+          continue;
+        }
+
+        if (!block.file && block.imageUrl) {
+          uploadedBlocks.push({
+            id: block.id,
+            type: 'image',
+            imageUrl: block.imageUrl,
+            caption: block.caption.trim()
           });
           continue;
         }
@@ -493,12 +580,10 @@ const Surveys: React.FC<SurveysProps> = ({
 
       const plainContent = uploadedBlocks
         .filter((block): block is Extract<SurveyContentBlock, { type: 'text' }> => block.type === 'text')
-        .map((block) => block.content)
+        .map((block) => stripHtml(block.content))
         .join('\n\n');
 
-      const { data, error } = await supabase
-        .from('survey_posts')
-        .insert({
+      const payload = {
           title: normalizedPost.title,
           category: normalizedPost.category,
           summary: normalizedPost.summary,
@@ -508,11 +593,46 @@ const Surveys: React.FC<SurveysProps> = ({
           pdf_url: normalizedPost.pdfUrl,
           published_at: normalizedPost.publishedAt,
           user_id: session.user.id
-        })
-        .select(
-          'id, title, category, summary, content, content_blocks, image_url, pdf_url, published_at, created_at'
-        )
-        .single();
+      };
+
+      let data:
+        | {
+            id: string;
+            title: string;
+            category: string;
+            summary: string;
+            content: string;
+            content_blocks: SurveyContentBlock[] | null;
+            image_url: string;
+            pdf_url: string;
+            published_at: string;
+            created_at: string;
+          }
+        | null = null;
+      let error: Error | null = null;
+
+      if (editingPostId) {
+        const response = await supabase
+          .from('survey_posts')
+          .update(payload)
+          .eq('id', editingPostId)
+          .select(
+            'id, title, category, summary, content, content_blocks, image_url, pdf_url, published_at, created_at'
+          )
+          .single();
+        data = response.data;
+        error = response.error;
+      } else {
+        const response = await supabase
+          .from('survey_posts')
+          .insert(payload)
+          .select(
+            'id, title, category, summary, content, content_blocks, image_url, pdf_url, published_at, created_at'
+          )
+          .single();
+        data = response.data;
+        error = response.error;
+      }
 
       if (error || !data) {
         setErrorMessage('No pude guardar el artículo. Inténtalo otra vez.');
@@ -534,10 +654,8 @@ const Surveys: React.FC<SurveysProps> = ({
       };
 
       onPublished(publishedPost);
-      setFormState(emptyForm);
-      setSelectedImage(null);
-      setContentBlocks([createEmptyTextBlock()]);
-      setSuccessMessage('Artículo publicado correctamente.');
+      resetEditor();
+      setSuccessMessage(editingPostId ? 'Artículo actualizado correctamente.' : 'Artículo publicado correctamente.');
       navigate(`/encuestas/${publishedPost.id}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No pude subir las imágenes en este momento.';
@@ -593,9 +711,11 @@ const Surveys: React.FC<SurveysProps> = ({
                 <div className="space-y-8">
                   {normalizeContentBlocks(selectedPost).map((block) =>
                     block.type === 'text' ? (
-                      <p key={block.id} className="text-lg leading-relaxed text-[#b8d8f4]">
-                        {block.content}
-                      </p>
+                      <div
+                        key={block.id}
+                        className="text-lg leading-relaxed text-[#b8d8f4] space-y-4 [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-2xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2"
+                        dangerouslySetInnerHTML={{ __html: block.content }}
+                      />
                     ) : (
                       <figure key={block.id} className="space-y-3">
                         <img
@@ -798,6 +918,48 @@ const Surveys: React.FC<SurveysProps> = ({
                     </div>
                   </div>
                 ) : null}
+
+                <div className="mt-8 rounded-[28px] border border-[#94cfff]/16 bg-white/[0.04] p-5">
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <div>
+                      <h3 className="font-heading text-2xl uppercase leading-none text-white mb-2">Artículos</h3>
+                      <p className="text-sm text-[#b8d8f4]">
+                        Elige una nota existente para editarla o crea una nueva desde cero.
+                      </p>
+                    </div>
+                    {editingPostId ? (
+                      <button
+                        type="button"
+                        onClick={resetEditor}
+                        className="rounded-full border border-[#94cfff]/30 px-4 py-2 text-xs uppercase tracking-[0.18em] text-white hover:bg-[#94cfff]/10"
+                      >
+                        Nueva nota
+                      </button>
+                    ) : null}
+                  </div>
+                  <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+                    {sortedPosts.map((post) => (
+                      <div
+                        key={post.id}
+                        className={`rounded-2xl border px-4 py-4 ${
+                          editingPostId === post.id
+                            ? 'border-[#94cfff]/40 bg-[#94cfff]/10'
+                            : 'border-[#94cfff]/12 bg-[#081a3a]/40'
+                        }`}
+                      >
+                        <p className="text-sm uppercase tracking-[0.16em] text-[#8bbce9] mb-2">{post.category}</p>
+                        <p className="text-base font-bold text-white leading-tight mb-3">{post.title}</p>
+                        <button
+                          type="button"
+                          onClick={() => startEditingPost(post)}
+                          className="text-xs uppercase tracking-[0.18em] text-[#94cfff] hover:text-white"
+                        >
+                          Editar artículo
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="rounded-[32px] border border-[#94cfff]/18 bg-[#f7fbff] p-8 text-[#16295d] shadow-[0_0_50px_rgba(11,30,70,0.18)]">
@@ -863,7 +1025,7 @@ const Surveys: React.FC<SurveysProps> = ({
                     <label className="flex items-center gap-3 w-full rounded-2xl bg-white border border-[#c9def6] px-4 py-4 text-[#16295d] cursor-pointer hover:border-[#6cb7f3] transition-colors">
                       <FileImage size={18} className="text-[#6cb7f3]" />
                       <span className="text-sm text-[#35548f]">
-                        {selectedImage ? selectedImage.name : 'Seleccionar imagen principal'}
+                        {selectedImage ? selectedImage.name : existingCoverImageUrl ? 'Portada actual cargada' : 'Seleccionar imagen principal'}
                       </span>
                       <input
                         type="file"
@@ -873,6 +1035,13 @@ const Surveys: React.FC<SurveysProps> = ({
                         className="hidden"
                       />
                     </label>
+                    {existingCoverImageUrl && !selectedImage ? (
+                      <img
+                        src={existingCoverImageUrl}
+                        alt="Portada actual"
+                        className="mt-4 w-full max-h-64 object-cover rounded-[20px] border border-[#d6e6f8]"
+                      />
+                    ) : null}
                   </label>
 
                   <div className="md:col-span-2 rounded-[28px] border border-[#c9def6] bg-white p-5 space-y-5">
@@ -924,14 +1093,59 @@ const Surveys: React.FC<SurveysProps> = ({
                           </div>
 
                           {block.type === 'text' ? (
-                            <textarea
-                              value={block.content}
-                              onChange={(event) => updateBlock(block.id, { content: event.target.value })}
-                              disabled={!session || isPublishing}
-                              rows={6}
-                              className="w-full rounded-2xl bg-white border border-[#c9def6] px-4 py-3 text-[#16295d] placeholder:text-[#7a8cab] outline-none focus:border-[#6cb7f3] disabled:opacity-40"
-                              placeholder="Escribe un párrafo del artículo"
-                            />
+                            <div className="space-y-3">
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => applyTextFormat(block.id, '<strong>', '</strong>', 'Texto en negrita')}
+                                  className="inline-flex items-center gap-1 rounded-full border border-[#c9def6] px-3 py-2 text-xs font-semibold text-[#16295d] hover:bg-[#eef6ff]"
+                                >
+                                  <Bold size={12} />
+                                  Negrita
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => applyTextFormat(block.id, '<em>', '</em>', 'Texto en cursiva')}
+                                  className="inline-flex items-center gap-1 rounded-full border border-[#c9def6] px-3 py-2 text-xs font-semibold text-[#16295d] hover:bg-[#eef6ff]"
+                                >
+                                  <Italic size={12} />
+                                  Cursiva
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => applyTextFormat(block.id, '<u>', '</u>', 'Texto subrayado')}
+                                  className="inline-flex items-center gap-1 rounded-full border border-[#c9def6] px-3 py-2 text-xs font-semibold text-[#16295d] hover:bg-[#eef6ff]"
+                                >
+                                  <Underline size={12} />
+                                  Subrayado
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => applyTextFormat(block.id, '<h3>', '</h3>', 'Subtítulo')}
+                                  className="inline-flex items-center gap-1 rounded-full border border-[#c9def6] px-3 py-2 text-xs font-semibold text-[#16295d] hover:bg-[#eef6ff]"
+                                >
+                                  H3
+                                </button>
+                              </div>
+                              <textarea
+                                ref={(node) => {
+                                  textEditorRefs.current[block.id] = node;
+                                }}
+                                value={block.content}
+                                onChange={(event) => updateBlock(block.id, { content: event.target.value })}
+                                disabled={!session || isPublishing}
+                                rows={8}
+                                className="w-full rounded-2xl bg-white border border-[#c9def6] px-4 py-3 text-[#16295d] placeholder:text-[#7a8cab] outline-none focus:border-[#6cb7f3] disabled:opacity-40"
+                                placeholder="Escribe un párrafo del artículo"
+                              />
+                              <div className="rounded-2xl border border-[#d6e6f8] bg-[#fbfdff] p-4">
+                                <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[#4c6aa1]">Vista previa</p>
+                                <div
+                                  className="space-y-3 text-[#16295d] [&_strong]:font-extrabold [&_em]:italic [&_u]:underline [&_h3]:font-heading [&_h3]:text-xl [&_h3]:uppercase [&_ul]:list-disc [&_ul]:pl-6"
+                                  dangerouslySetInnerHTML={{ __html: block.content || '<p>Sin contenido todavía.</p>' }}
+                                />
+                              </div>
+                            </div>
                           ) : (
                             <div className="space-y-4">
                               <label className="flex items-center gap-3 w-full rounded-2xl bg-white border border-[#c9def6] px-4 py-4 text-[#16295d] cursor-pointer hover:border-[#6cb7f3] transition-colors">
@@ -991,7 +1205,7 @@ const Surveys: React.FC<SurveysProps> = ({
                       className="inline-flex items-center justify-center gap-2 rounded-full bg-[#081a3a] px-6 py-3 font-heading font-bold uppercase tracking-[0.25em] text-sm text-white shadow-[0_14px_30px_rgba(8,26,58,0.2)] hover:bg-[#102553] transition-colors disabled:opacity-40"
                     >
                       {isPublishing ? <Loader className="animate-spin" size={18} /> : <PlusCircle size={18} />}
-                      Publicar artículo
+                      {editingPostId ? 'Guardar cambios' : 'Publicar artículo'}
                     </button>
                   </div>
                 </form>

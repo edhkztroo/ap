@@ -33,6 +33,14 @@ for insert
 to authenticated
 with check (auth.uid() = user_id);
 
+drop policy if exists "Authenticated users can update survey posts" on public.survey_posts;
+create policy "Authenticated users can update survey posts"
+on public.survey_posts
+for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
 insert into storage.buckets (id, name, public)
 values ('survey-images', 'survey-images', true)
 on conflict (id) do nothing;

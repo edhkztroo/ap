@@ -55,7 +55,11 @@ function App() {
   const hasLoadedSurveyPosts = useRef(false);
 
   const handlePublished = useMemo(
-    () => (post: SurveyPost) => setSurveyPosts((current) => [post, ...current]),
+    () => (post: SurveyPost) =>
+      setSurveyPosts((current) => {
+        const withoutCurrent = current.filter((item) => item.id !== post.id);
+        return [post, ...withoutCurrent];
+      }),
     []
   );
 

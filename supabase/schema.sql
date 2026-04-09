@@ -41,6 +41,13 @@ to authenticated
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
+drop policy if exists "Authenticated users can delete survey posts" on public.survey_posts;
+create policy "Authenticated users can delete survey posts"
+on public.survey_posts
+for delete
+to authenticated
+using (auth.uid() = user_id);
+
 insert into storage.buckets (id, name, public)
 values ('survey-images', 'survey-images', true)
 on conflict (id) do nothing;

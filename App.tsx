@@ -62,6 +62,11 @@ function App() {
       }),
     []
   );
+  const handleDeleted = useMemo(
+    () => (postId: string) =>
+      setSurveyPosts((current) => current.filter((item) => item.id !== postId)),
+    []
+  );
 
   useEffect(() => {
     if (isSurveyRoute) {
@@ -166,6 +171,7 @@ function App() {
         isLoading={isSurveyLoading}
         loadError={surveyError}
         onPublished={handlePublished}
+        onDeleted={handleDeleted}
       />
     </Suspense>
   );

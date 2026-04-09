@@ -14,6 +14,7 @@ import {
   PlusCircle,
   Rows3,
   Search,
+  Trash2,
   Underline
 } from 'lucide-react';
 import { Session } from '@supabase/supabase-js';
@@ -30,6 +31,7 @@ interface SurveysProps {
   isLoading: boolean;
   loadError: string;
   onPublished: (post: SurveyPost) => void;
+  onDeleted: (postId: string) => void;
 }
 
 interface AdminTextBlock {
@@ -165,7 +167,8 @@ const Surveys: React.FC<SurveysProps> = ({
   isSupabaseReady,
   isLoading,
   loadError,
-  onPublished
+  onPublished,
+  onDeleted
 }) => {
   const navigate = useNavigate();
   const { postId } = useParams();
@@ -769,6 +772,38 @@ const Surveys: React.FC<SurveysProps> = ({
     }
   };
 
+  const handleDeletePost = async (post: SurveyPost) => {
+    if (!supabase || !session) {
+      setErrorMessage('Debes iniciar sesión para eliminar artículos.');
+      return;
+    }
+
+    const shouldDelete = window.confirm(`¿Eliminar definitivamente "${post.title}"?`);
+    if (!shouldDelete) {
+      return;
+    }
+
+    setIsPublishing(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    const { error } = await supabase.from('survey_posts').delete().eq('id', post.id);
+
+    setIsPublishing(false);
+
+    if (error) {
+      setErrorMessage('No pude eliminar el artículo. Inténtalo otra vez.');
+      return;
+    }
+
+    if (editingPostId === post.id) {
+      resetEditor();
+    }
+
+    onDeleted(post.id);
+    setSuccessMessage('Artículo eliminado correctamente.');
+  };
+
   if (mode === 'detail') {
     return (
     <>
@@ -1114,13 +1149,23 @@ const Surveys: React.FC<SurveysProps> = ({
                       >
                         <p className="text-sm uppercase tracking-[0.16em] text-[#8bbce9] mb-2">{post.category}</p>
                         <p className="text-base font-bold text-white leading-tight mb-3">{post.title}</p>
-                        <button
-                          type="button"
-                          onClick={() => startEditingPost(post)}
-                          className="text-xs uppercase tracking-[0.18em] text-[#94cfff] hover:text-white"
-                        >
-                          Editar artículo
-                        </button>
+                        <div className="flex flex-wrap items-center gap-4">
+                          <button
+                            type="button"
+                            onClick={() => startEditingPost(post)}
+                            className="text-xs uppercase tracking-[0.18em] text-[#94cfff] hover:text-white"
+                          >
+                            Editar artículo
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleDeletePost(post)}
+                            className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[#ffb3b3] hover:text-white"
+                          >
+                            <Trash2 size={13} />
+                            Eliminar
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {filteredEditorPosts.length === 0 ? (

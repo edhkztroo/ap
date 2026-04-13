@@ -47,7 +47,7 @@ function HomePage() {
 
 function App() {
   const location = useLocation();
-  const [surveyPosts, setSurveyPosts] = useState<SurveyPost[]>(DEFAULT_SURVEY_POSTS);
+  const [surveyPosts, setSurveyPosts] = useState<SurveyPost[]>(supabase ? [] : DEFAULT_SURVEY_POSTS);
   const [surveyError, setSurveyError] = useState('');
   const [isSurveyLoading, setIsSurveyLoading] = useState(true);
   const isSupabaseReady = Boolean(supabase);
@@ -112,7 +112,6 @@ function App() {
 
       if (error) {
         setSurveyError(error.message);
-        setSurveyPosts(DEFAULT_SURVEY_POSTS);
         setIsSurveyLoading(false);
         return;
       }
@@ -131,7 +130,7 @@ function App() {
           createdAt: post.created_at
         })) ?? [];
 
-      setSurveyPosts(normalizedPosts.length > 0 ? normalizedPosts : DEFAULT_SURVEY_POSTS);
+      setSurveyPosts(normalizedPosts);
       setSurveyError('');
       hasLoadedSurveyPosts.current = true;
       setIsSurveyLoading(false);
